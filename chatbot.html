@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShayaanGPT - Your All-Rounder Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles for dark mode */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Fill entire viewport height */
+            margin: 0;
+            padding: 0; /* Remove body padding to allow full screen */
+            box-sizing: border-box;
+            color: #e0e0e0; /* Default text color for dark mode */
+            overflow: hidden; /* Prevent body scroll if container is 95vh */
+        }
+
+        .chat-container {
+            background-color: #242424; /* Slightly lighter dark background for the container */
+            border-radius: 1rem; /* Slightly less rounded for a more modern feel */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); /* Deeper shadow for dark mode */
+            width: 100%;
+            max-width: 800px; /* Wider container for a fuller design */
+            height: 95vh; /* Take almost full viewport height */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 0 auto; /* Center the container horizontally */
+        }
+
+        /* Header styling */
+        .chat-header {
+            background-color: #333333; /* Darker header */
+            color: #f0f0f0; /* Lighter text for header */
+            padding: 1.25rem 1.5rem; /* More padding */
+            text-align: center;
+            font-size: 2.25rem; /* Larger font size for the title */
+            font-weight: 800; /* Extra bold */
+            border-bottom: 1px solid #3a3a3a; /* Subtle border */
+            border-top-left-radius: 1rem;
+            border-top-right-radius: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Chat history area */
+        .chat-history {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem; /* Slightly adjusted spacing */
+            scroll-behavior: smooth;
+        }
+
+        /* Message bubble styling */
+        .message {
+            max-width: 80%; /* Consistent width */
+            padding: 0.8rem 1.1rem;
+            border-radius: 1.2rem; /* Rounded corners */
+            word-wrap: break-word;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+            opacity: 0; /* Start hidden for animation */
+            transform: translateY(10px); /* Start slightly below */
+            animation: messageEntry 0.3s ease-out forwards; /* Animation for entry */
+        }
+
+        /* Keyframes for message entry animation */
+        @keyframes messageEntry {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background-color: #4a69bd; /* Muted blue for user messages (dark mode friendly) */
+            color: #ffffff; /* White text on blue */
+            align-self: flex-end;
+            border-bottom-right-radius: 0.4rem; /* Asymmetrical rounding */
+        }
+
+        .bot-message {
+            background-color: #3b3b3b; /* Slightly darker than container for bot messages */
+            color: #e0e0e0; /* Light gray text for bot messages */
+            align-self: flex-start;
+            border-bottom-left-radius: 0.4rem; /* Asymmetrical rounding */
+        }
+
+        /* Input area styling */
+        .input-area {
+            display: flex;
+            padding: 1.2rem;
+            border-top: 1px solid #3a3a3a; /* Subtle border */
+            gap: 0.75rem;
+            background-color: #242424; /* Matches container background */
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Shadow on top */
+        }
+
+        .input-area textarea {
+            flex-grow: 1;
+            border: 1px solid #555555; /* Darker border */
+            border-radius: 0.8rem; /* Rounded textarea */
+            padding: 0.8rem 1.1rem;
+            resize: none;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #333333; /* Darker background for textarea */
+            color: #e0e0e0; /* Light text for input */
+        }
+
+        .input-area textarea::placeholder {
+            color: #aaaaaa; /* Lighter placeholder text */
+        }
+
+        .input-area textarea:focus {
+            border-color: #6a8cd2; /* Lighter blue on focus */
+            box-shadow: 0 0 0 3px rgba(106, 140, 210, 0.3); /* Soft blue focus ring */
+            background-color: #383838; /* Slightly lighter on focus */
+        }
+
+        .input-area button {
+            background-color: #6a8cd2; /* Muted blue button */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.8rem; /* Rounded button */
+            cursor: pointer;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Button shadow */
+        }
+
+        .input-area button:hover {
+            background-color: #5b7bb8; /* Darker blue on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-area button:active {
+            transform: translateY(1px); /* Slight press effect */
+            box-shadow: none;
+        }
+
+        .loading-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            background-color: #333333; /* Matches bot message color */
+            color: #aaaaaa; /* Lighter gray for text */
+            font-style: italic;
+            margin-left: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chat-container {
+                max-width: 98%; /* Take up more width on smaller screens */
+                height: 98vh; /* Almost full height */
+                border-radius: 0.5rem; /* Slightly less rounded on smaller screens */
+            }
+            .chat-header {
+                font-size: 2rem;
+                padding: 1rem 1.25rem;
+            }
+            .chat-history {
+                padding: 1rem;
+                gap: 0.6rem;
+            }
+            .message {
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+            .input-area {
+                padding: 0.75rem;
+                gap: 0.5rem;
+            }
+            .input-area button {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .chat-container {
+                border-radius: 0; /* No rounded corners on very small screens for full width */
+                height: 100vh; /* Full height on mobile */
+                max-width: 100%;
+            }
+            body {
+                padding: 0;
+            }
+            .chat-header {
+                font-size: 1.8rem;
+                padding: 0.8rem 1rem;
+                border-radius: 0; /* No rounded corners on header on full mobile */
+            }
+            .chat-history {
+                padding: 0.75rem;
+                gap: 0.5rem;
+            }
+            .message {
+                max-width: 95%;
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            .input-area {
+                padding: 0.6rem;
+                gap: 0.4rem;
+            }
+            .input-area button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .input-area textarea {
+                padding: 0.6rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            ShayaanGPT
+        </header>
+
+        <div id="chat-history" class="chat-history">
+            <!-- Initial bot message will be added dynamically by JavaScript -->
+        </div>
+
+        <div class="loading-indicator" id="loading-indicator">
+            ShayaanGPT is thinking...
+        </div>
+
+        <div class="input-area">
+            <textarea id="user-input" placeholder="Ask ShayaanGPT anything..." rows="2"></textarea>
+            <button id="send-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send-horizontal"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get references to DOM elements
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        // Generate a unique session ID for this user (for maintaining chat history on the server)
+        const sessionId = localStorage.getItem('chatbotSessionId') || `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem('chatbotSessionId', sessionId);
+        console.log("Chatbot Session ID:", sessionId);
+
+        let userName = localStorage.getItem('userName'); // Retrieve username
+
+        // Function to display a message in the chat history
+        function displayMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${type}-message`);
+            // Set animation delay for sequential appearance
+            messageDiv.style.animationDelay = `${chatHistory.children.length * 0.05}s`;
+            messageDiv.textContent = message;
+            chatHistory.appendChild(messageDiv);
+            // Scroll to the bottom to show the latest message
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // Function to send a message to YOUR Flask chatbot API
+        async function sendMessage() {
+            const prompt = userInput.value.trim();
+            if (!prompt) return;
+
+            displayMessage(prompt, 'user');
+            userInput.value = '';
+
+            loadingIndicator.style.display = 'block';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                // YOUR FLASK CHATBOT API ENDPOINT:
+                // This URL must match where your Flask app is running.
+                // If you're running it locally, 'http://127.0.0.1:5000/chat' is correct.
+                // If you host it online, replace this with your hosted URL.
+                const yourChatbotApiUrl = 'http://127.0.0.1:5000/chat';
+
+                // Prepare the payload for your Flask API
+                const payload = {
+                    message: prompt,
+                    session_id: sessionId
+                };
+
+                const response = await fetch(yourChatbotApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                let botResponse;
+                if (response.ok) {
+                    botResponse = result.response;
+                } else {
+                    console.error("Chatbot API Error:", response.status, result);
+                    botResponse = `Error from ShayaanGPT: ${result.error || response.statusText}`;
+                }
+
+                displayMessage(botResponse, 'bot');
+
+            } catch (error) {
+                console.error('Error connecting to ShayaanGPT API:', error);
+                displayMessage("An error occurred while connecting to ShayaanGPT. Please ensure your Python Flask API is running (check your terminal) and accessible.", 'bot');
+            } finally {
+                loadingIndicator.style.display = 'none';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        }
+
+        // Event listener for the send button
+        sendButton.addEventListener('click', sendMessage);
+
+        // Event listener for the Enter key in the textarea
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Focus on the input and display initial personalized greeting when the page loads
+        window.onload = () => {
+            userInput.focus();
+
+            // Prompt for user's name if not already stored
+            if (!userName) {
+                userName = prompt("Hello there! What's your name?");
+                if (userName) {
+                    localStorage.setItem('userName', userName);
+                } else {
+                    userName = "Friend"; // Default name if user cancels or leaves blank
+                }
+            }
+            displayMessage(`Hello, ${userName}! I'm ShayaanGPT, your all-rounder assistant. How can I help you today?`, 'bot');
+        };
+    </script>
+</body>
+</html>
